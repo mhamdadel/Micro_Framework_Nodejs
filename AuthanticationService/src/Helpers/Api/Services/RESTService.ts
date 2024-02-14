@@ -1,5 +1,7 @@
+import injectable from '@/Helpers/Decorators/injectable';
 import IRestApiRequestOptions from '@/Utilts/Interfaces/IRestApiRequestOptions';
 
+@injectable("RESTService")
 class RESTService {
 
   private url;

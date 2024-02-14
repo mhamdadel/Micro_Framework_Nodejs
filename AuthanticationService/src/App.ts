@@ -11,6 +11,8 @@ import csrf from 'csurf';
 import IRouter from '@/Utilts/Interfaces/IRouter';
 import HttpException from '@/Utilts/Exceptions/HttpException';
 import appConfig from './Helpers/appConfig';
+import inject from './Helpers/Decorators/inject';
+import RESTService from './Helpers/Api/Services/RESTService';
 
 appConfig;
 
