@@ -1,23 +1,24 @@
 import CustomConnectOptions from '@/Utilts/Interfaces/CustomConnectOptions';
+import IDBConnection from '@/Utilts/Interfaces/IDBConnection';
+import IDatabaseConnectionOptions from '@/Utilts/Interfaces/IDatabaseConnectionOptions';
 import mongoose, { Mongoose } from 'mongoose';
 
-class Database {
-    private readonly uri: string;
+class MongoDB implements IDBConnection {
+    private readonly url: string;
     private mongoose: Mongoose;
 
-    constructor(uri: string) {
-        this.uri = uri;
+    constructor(options: IDatabaseConnectionOptions) {
+        this.url = options.url!;
         this.mongoose = mongoose;
-        this.connect();
     }
 
-    private connect(): void {
+    public connect(): void {
         const options: CustomConnectOptions = {
             useFindAndModify: false,
             useCreateIndex: true,
         };
 
-        this.mongoose.connect(this.uri, options)
+        this.mongoose.connect(this.url, options)
             .then(() => {
                 console.log('MongoDB connected successfully');
             })
@@ -37,4 +38,4 @@ class Database {
     }
 }
 
-export default Database;
+export default MongoDB;

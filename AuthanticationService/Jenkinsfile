@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+    
+    environment {
+        NODE_VERSION = '22'
+        DOCKER_IMAGE = 'node:' + NODE_VERSION
+    }
+    
+    stages {
+        stage('Login to GitHub') {
+            steps {
+                script {
+                    git branch: 'main',
+                    credentialsId: 'your-github-credentials-id',
+                    url: 'https://github.com/mhamdadel/Micro_Framework_Nodejs.git'
+                }
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                container(DOCKER_IMAGE) {
+                    sh 'cd .\AuthanticationService\ && npm install'
+                }
+            }
+        }
+        
+        stage('Lint and Test') {
+            steps {
+                container(DOCKER_IMAGE) {
+                    sh 'cd .\AuthanticationService\ && npm run lint'
+                    sh 'cd .\AuthanticationService\ && npm test'
+                }
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build Docker image
+                    docker.build('your-docker-image-name:latest')
+                }
+            }
+        }
+        
+        stage('Login to Docker') {
+            steps {
+                script {
+                    // Use Docker credentials plugin to login
+                    docker.withRegistry('https://your-docker-registry-url', 'your-docker-credentials-id') {
+                        docker.image('your-docker-image-name:latest').push('latest')
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline succeeded! Deploy your application.'
+        }
+        failure {
+            echo 'Pipeline failed! Take appropriate action.'
+        }
+    }
+}
