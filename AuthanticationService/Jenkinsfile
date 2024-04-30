@@ -4,11 +4,26 @@ pipeline {
     environment {
         NODE_VERSION = '22'
         DOCKER_IMAGE = "node:${NODE_VERSION}"
+        DOCKER_HUB_CREDENTIALS = credentials('Docker')
         DOCKERFILE_PATH = './AuthanticationService/Dockerfile'
         DOCKER_HUB_REPO = 'muhammedadel/authentication-service'
     }
     
     stages {
+        stage('Install Docker') {
+            steps {
+                script {
+                    sh 'curl -fsSL https://get.docker.com | bash'
+                    sh 'sudo usermod -aG docker jenkins'  // Add Jenkins user to the Docker group
+                    sh 'sudo systemctl restart docker'     // Restart Docker service
+                }
+                post {
+                    success {
+                        echo 'Docker installed successfully!'
+                    }
+                }
+            }
+        }
         stage('Login to GitHub') {
             steps {
                 script {
@@ -22,7 +37,7 @@ pipeline {
         stage('Build Docker Container') {
             steps {
                 script {
-                    docker.build("-f ${DOCKERFILE_PATH} -t ${DOCKER_HUB_REPO}:latest .")
+                    sh "docker build -t ${DOCKER_HUB_REPO}:latest ."
                 }
             }
         }
@@ -36,18 +51,29 @@ pipeline {
             }
         }
         
+        stage('Login to Docker') {
+            steps {
+                script {
+                    sh "echo ${DOCKER_HUB_CREDENTIALS_PSW} | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin"
+                }
+            }
+        }
+        
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('https://hub.docker.com/', 'Docker') {
-                        docker.image("${DOCKER_HUB_REPO}:latest").push('latest')
-                    }
+                    sh "docker push ${DOCKER_HUB_REPO}:latest"
                 }
             }
         }
     }
     
     post {
+        always {
+            echo 'Docker logging out...'
+            sh "docker logout"
+            echo 'Pipeline completed!'
+        }
         success {
             echo 'Pipeline succeeded! Deploy your application.'
         }
