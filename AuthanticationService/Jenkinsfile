@@ -3,7 +3,9 @@ pipeline {
     
     environment {
         NODE_VERSION = '22'
-        DOCKER_IMAGE = 'node:' + NODE_VERSION
+        DOCKER_IMAGE = "node:${NODE_VERSION}"
+        DOCKERFILE_PATH = './AuthanticationService/Dockerfile'
+        DOCKER_HUB_REPO = 'muhammedadel/authentication-service'
     }
     
     stages {
@@ -11,44 +13,34 @@ pipeline {
             steps {
                 script {
                     git branch: 'main',
-                    credentialsId: 'your-github-credentials-id',
+                    credentialsId: 'Github',
                     url: 'https://github.com/mhamdadel/Micro_Framework_Nodejs.git'
                 }
             }
         }
         
-        stage('Install Dependencies') {
-            steps {
-                container(DOCKER_IMAGE) {
-                    sh 'cd .\AuthanticationService\ && npm install'
-                }
-            }
-        }
-        
-        stage('Lint and Test') {
-            steps {
-                container(DOCKER_IMAGE) {
-                    sh 'cd .\AuthanticationService\ && npm run lint'
-                    sh 'cd .\AuthanticationService\ && npm test'
-                }
-            }
-        }
-        
-        stage('Build Docker Image') {
+        stage('Build Docker Container') {
             steps {
                 script {
-                    // Build Docker image
-                    docker.build('your-docker-image-name:latest')
+                    docker.build("-f ${DOCKERFILE_PATH} -t ${DOCKER_HUB_REPO}:latest .")
                 }
             }
         }
         
-        stage('Login to Docker') {
+        stage('Install Dependencies and Start Application') {
             steps {
                 script {
-                    // Use Docker credentials plugin to login
-                    docker.withRegistry('https://your-docker-registry-url', 'your-docker-credentials-id') {
-                        docker.image('your-docker-image-name:latest').push('latest')
+                    docker.run("--rm -v ${WORKSPACE}:/app ${DOCKER_HUB_REPO}:latest npm install")
+                    docker.run("--rm -v ${WORKSPACE}:/app ${DOCKER_HUB_REPO}:latest npm start")
+                }
+            }
+        }
+        
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://hub.docker.com/', 'Docker') {
+                        docker.image("${DOCKER_HUB_REPO}:latest").push('latest')
                     }
                 }
             }
