@@ -10,20 +10,6 @@ pipeline {
     }
     
     stages {
-        stage('Install Docker') {
-            steps {
-                script {
-                    sh 'curl -fsSL https://get.docker.com | bash'
-                    sh 'sudo usermod -aG docker jenkins'  // Add Jenkins user to the Docker group
-                    sh 'sudo systemctl restart docker'     // Restart Docker service
-                }
-                post {
-                    success {
-                        echo 'Docker installed successfully!'
-                    }
-                }
-            }
-        }
         stage('Login to GitHub') {
             steps {
                 script {
@@ -37,7 +23,9 @@ pipeline {
         stage('Build Docker Container') {
             steps {
                 script {
-                    sh "docker build -t ${DOCKER_HUB_REPO}:latest ."
+                    dir('AuthenticationService') {
+                        sh "docker build -t ${DOCKER_HUB_REPO}:latest ."
+                    }
                 }
             }
         }
@@ -45,8 +33,12 @@ pipeline {
         stage('Install Dependencies and Start Application') {
             steps {
                 script {
-                    docker.run("--rm -v ${WORKSPACE}:/app ${DOCKER_HUB_REPO}:latest npm install")
-                    docker.run("--rm -v ${WORKSPACE}:/app ${DOCKER_HUB_REPO}:latest npm start")
+                    dir('AuthenticationService') {
+                        sh """
+                        docker run --rm -v \${WORKSPACE}:/app ${DOCKER_HUB_REPO}:latest npm install
+                        docker run --rm -v \${WORKSPACE}:/app ${DOCKER_HUB_REPO}:latest npm start
+                        """
+                    }
                 }
             }
         }
@@ -54,7 +46,9 @@ pipeline {
         stage('Login to Docker') {
             steps {
                 script {
-                    sh "echo ${DOCKER_HUB_CREDENTIALS_PSW} | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin"
+                    dir('AuthenticationService') {
+                        sh "echo ${DOCKER_HUB_CREDENTIALS_PSW} | docker login -u ${DOCKER_HUB_CREDENTIALS_USR} --password-stdin"
+                    }
                 }
             }
         }
@@ -62,7 +56,9 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    sh "docker push ${DOCKER_HUB_REPO}:latest"
+                    dir('AuthenticationService') {
+                        sh "docker push ${DOCKER_HUB_REPO}:latest"
+                    }
                 }
             }
         }
