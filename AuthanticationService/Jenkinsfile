@@ -65,11 +65,6 @@ pipeline {
     }
     
     post {
-        always {
-            echo 'Docker logging out...'
-            sh "docker logout"
-            echo 'Pipeline completed!'
-        }
         success {
             echo 'Pipeline succeeded! Deploy your application.'
         }
