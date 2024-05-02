@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+    
+    environment {
+        NODE_VERSION = '22'
+        DOCKER_IMAGE = "node:${NODE_VERSION}"
+        DOCKER_HUB_CREDENTIALS = credentials('Docker')
+        DOCKERFILE_PATH = './AuthanticationService/Dockerfile'
+        DOCKER_HUB_REPO = 'muhammedadel/authentication-service'
+    }
+    
+    stages {
+        stage('Login to Docker') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'Docker', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
+                    }
+                }
+            }
+        }
+        
+        stage('Build & push Dockerfile') {
+            steps {
+                sh "cd AuthanticationService/ && ansible-playbook ansible-playbook.yml"
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline succeeded! Deploy your application.'
+        }
+        failure {
+            echo 'Pipeline failed! Take appropriate action.'
+        }
+    }
+}

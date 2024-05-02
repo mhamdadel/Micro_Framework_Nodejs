@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+    
+    environment {
+        NODE_VERSION = '22'
+        DOCKER_HUB_REPO = 'muhammedadel/authentication-service'
+        DOCKERHUB_CREDENTIALS = credentials('Docker')
+    }
+    
+    stages {
+        stage('Stop and Remove Containers') {
+            steps {
+                script {
+                    bat "docker stop authentication-service || exit 0"
+                    bat "docker rm authentication-service || exit 0"
+                    bat "docker rmi ${DOCKER_HUB_REPO} || exit 0"
+                }
+            }
+        }
+
+        stage('TypeScript Compilation') {
+            steps {
+                script {
+                    dir('AuthenticationService') {
+                        bat "npm install"
+                        bat "npm run build"
+                    }
+                }
+            }
+        }
+
+        // stage('Remove Development Dependencies') {
+        //     steps {
+        //         script {
+        //             dir('AuthenticationService') {
+        //                 bat "npm prune --production"
+        //             }
+        //         }
+        //     }
+        // }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dir('AuthenticationService') {
+                        bat "docker build -t ${DOCKER_HUB_REPO} -f Dockerfile ."
+                    }
+                }
+            }
+        }
+        
+        stage('Docker Login') {
+            steps {
+                bat "docker login -u %DOCKERHUB_CREDENTIALS_USR% --password %DOCKERHUB_CREDENTIALS_PSW%"
+            }
+        }
+
+        stage('Push Docker Image to Dockerhub') {
+            steps {
+                script {
+                    bat "docker push ${DOCKER_HUB_REPO}"
+                }
+            }
+        }
+        
+        stage('Run Container') {
+            steps {
+                script {
+                    bat "docker run -d --name authentication-service -p 3000:80 ${DOCKER_HUB_REPO}"
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline succeeded! Deploy your application.'
+        }
+        failure {
+            echo 'Pipeline failed! Take appropriate action.'
+        }
+    }
+}

@@ -51,7 +51,7 @@ const guardByReq = (prefix: string) => {
                 return res.status(Unauthorized.statusCode).json(Unauthorized);
             }
 
-            const isAuthorized = role.actions.find(
+            const isAuthorized = role!.actions.find(
                 (action: { url: string; type: string; }) =>
                     (action.url === url && action.type === method) ||
                     (action.url === "*" &&
