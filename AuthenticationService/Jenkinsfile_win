@@ -58,7 +58,7 @@ pipeline {
                 script {
                     bat "docker run -d --name authentication-service -p 3000:80 \
                         -e APPLICATION_PORT=3000 \
-                        -e APPLICATION_NAME='Hello World' \
+                        -e APPLICATION_NAME=\"hello-world\" \
                         -e DEFAULT_LANGUAGE='en' \
                         -e MONGODB_URL=your_mongodb_url \
                         -e MONGODB_PORT=27017 \
