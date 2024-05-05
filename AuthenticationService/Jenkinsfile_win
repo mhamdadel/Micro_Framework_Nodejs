@@ -28,16 +28,6 @@ pipeline {
                 }
             }
         }
-
-        // stage('Remove Development Dependencies') {
-        //     steps {
-        //         script {
-        //             dir('AuthenticationService') {
-        //                 bat "npm prune --production"
-        //             }
-        //         }
-        //     }
-        // }
         
         stage('Build Docker Image') {
             steps {
@@ -66,7 +56,40 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
-                    bat "docker run -d --name authentication-service -p 3000:80 ${DOCKER_HUB_REPO}"
+                    stage('Run Container') {
+    steps {
+        script {
+            bat "docker run -d --name authentication-service -p 3000:80 \
+                -e APPLICATION_PORT=3000 \
+                -e APPLICATION_NAME='Hello World' \
+                -e DEFAULT_LANGUAGE='en' \
+                -e MONGODB_URL=your_mongodb_url \
+                -e MONGODB_PORT=27017 \
+                -e MONGODB_DATABASE=your_mongodb_database \
+                -e MYSQL_URL=your_mysql_url \
+                -e MYSQL_PORT=3306 \
+                -e MYSQL_DATABASE=your_mysql_database \
+                -e MYSQL_USER=your_mysql_user \
+                -e MYSQL_PASSWORD=your_mysql_password \
+                -e REDIS_HOST=your_redis_host \
+                -e REDIS_PORT=6379 \
+                -e REDIS_PASSWORD=your_redis_password \
+                -e ELASTICSEARCH_NODE=http://localhost:9200 \
+                -e ELASTICSEARCH_USER=your_elasticsearch_user \
+                -e ELASTICSEARCH_PASSWORD=your_elasticsearch_password \
+                -e KAFKA_BROKERS=localhost:9092 \
+                -e KAFKA_CLIENT_ID=your_kafka_client_id \
+                -e KAFKA_GROUP_ID=your_kafka_group_id \
+                -e RABBITMQ_URL=amqp://localhost:5672 \
+                -e RABBITMQ_EXCHANGE=your_rabbitmq_exchange \
+                -e RABBITMQ_QUEUE=your_rabbitmq_queue \
+                -e MQTT_URL=mqtt://localhost:1883 \
+                -e MQTT_CLIENT_ID=your_mqtt_client_id \
+                ${DOCKER_HUB_REPO}"
+        }
+    }
+}
+
                 }
             }
         }

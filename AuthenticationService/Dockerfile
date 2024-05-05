@@ -25,7 +25,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 COPY . /app
 
-RUN npm install
+RUN npm install --only=prod 
 
 EXPOSE 3000
 
