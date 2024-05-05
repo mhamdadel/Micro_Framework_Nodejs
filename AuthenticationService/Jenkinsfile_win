@@ -56,7 +56,7 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
-                    bat "docker run -d --name authentication-service -p 3000:80 \
+                    bat "docker run -d --name authentication-service -p 3000:3000 \
                         -e APPLICATION_PORT=3000 \
                         -e APPLICATION_NAME=\"hello-world\" \
                         -e DEFAULT_LANGUAGE='en' \
